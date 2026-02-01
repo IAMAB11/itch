@@ -2,7 +2,7 @@ import struct
 from dataclasses import make_dataclass
 from typing import Dict, List, Tuple, Type
 
-MESSAGES = b"SAFECXDUBHRYPQINLVWKJhO"
+AllMessages = b"SAFECXDUBHRYPQINLVWKJhO"
 
 
 class MarketMessage(object):

@@ -1,6 +1,6 @@
 from typing import IO, BinaryIO, Callable, Iterator, Optional, Tuple
 
-from itch.messages import MESSAGES, MarketMessage
+from itch.messages import AllMessages, MarketMessage
 from itch.messages import messages as msgs
 
 
@@ -10,7 +10,7 @@ class MessageParser(object):
 
     """
 
-    def __init__(self, message_type: bytes = MESSAGES):
+    def __init__(self, message_type: bytes = AllMessages):
         self.message_type = message_type
 
     def get_message_type(self, message: bytes) -> MarketMessage:

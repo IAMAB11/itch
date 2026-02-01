@@ -4,32 +4,21 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "itchfeed"
-version = "1.0.6"
+dynamic = ["version"]
+description = "Simple parser for ITCH messages"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
 authors = [
     {name = "Bertin Balouki SIMYELI", email = "bertin@bbs-trading.com"},
 ]
 maintainers = [
     {name = "Bertin Balouki SIMYELI", email = "bertin@bbs-trading.com"},
 ]
-description = "Simple parser for ITCH messages"
-readme = "README.md"
-license = "MIT"
 keywords = [
-    "Finance",
-    "Financial",
-    "Quantitative",
-    "Equities",
-    "Totalview-ITCH",
-    "Totalview",
-    "Nasdaq-ITCH",
-    "Nasdaq",
-    "ITCH",
-    "Data",
-    "Feed",
-    "ETFs",
-    "Funds",
-    "Trading",
-    "Investing",
+    "Finance", "Financial", "Quantitative", "Equities",
+    "Totalview-ITCH", "Totalview", "Nasdaq-ITCH", "Nasdaq",
+    "ITCH", "Data", "Feed", "ETFs", "Funds", "Trading", "Investing",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -39,7 +28,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-dynamic = ["dependencies"]
+dependencies = []
 
 [project.urls]
 "Homepage" = "https://github.com/bbalouki/itch"
@@ -50,4 +39,4 @@ dynamic = ["dependencies"]
 packages = ["itch"]
 
 [tool.setuptools.dynamic]
-dependencies = { file = ["requirements.txt"] }
+version = { file = ["VERSION.txt"] }
