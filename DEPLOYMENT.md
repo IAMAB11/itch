@@ -90,7 +90,8 @@ DEPLOYMENT_BRANCH=main
 
 - The `DEPLOY_TOKEN` should be kept secure and only given necessary permissions
 - Consider using a dedicated machine/bot account for deployments
-- The workflow uses `--force` push to ensure sync, be careful with the target repository
+- The workflow uses `--force-with-lease` push to ensure safe sync while preventing accidental overwrites
+- Credentials are securely handled using git credential helper and cleaned up after use
 - Review the workflow logs to ensure successful deployments
 
 ## Troubleshooting

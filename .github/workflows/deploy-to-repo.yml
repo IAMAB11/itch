@@ -1,6 +1,6 @@
 name: Deploy to Deployment Repository
 
-'on':
+on:
   push:
     branches:
       - main
@@ -62,13 +62,21 @@ jobs:
             exit 0
           fi
           
-          # Set up the deployment remote
-          git remote add deployment https://x-access-token:${DEPLOY_TOKEN}@github.com/${TARGET_REPO}.git
+          # Configure git credential helper to avoid exposing token in URLs
+          git config --global credential.helper store
+          echo "https://x-access-token:${DEPLOY_TOKEN}@github.com" > ~/.git-credentials
+          
+          # Set up the deployment remote using HTTPS without token in URL
+          git remote add deployment https://github.com/${TARGET_REPO}.git
           
           # Fetch the deployment repository
           git fetch deployment || echo "Deployment repository might not exist yet"
           
-          # Push to the deployment repository
-          git push deployment HEAD:${TARGET_BRANCH} --force
+          # Push to the deployment repository using --force-with-lease for safety
+          # This prevents overwriting if remote has been updated since fetch
+          git push deployment HEAD:${TARGET_BRANCH} --force-with-lease
+          
+          # Clean up credentials
+          rm -f ~/.git-credentials
           
           echo "Successfully deployed to ${TARGET_REPO}@${TARGET_BRANCH}"
