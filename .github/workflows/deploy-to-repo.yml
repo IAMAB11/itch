@@ -56,11 +56,22 @@ jobs:
           TARGET_REPO: ${{ steps.setup.outputs.target_repo }}
           TARGET_BRANCH: ${{ steps.setup.outputs.target_branch }}
         run: |
+          set -e  # Exit on error
+          
           if [ -z "$DEPLOY_TOKEN" ]; then
             echo "Warning: DEPLOY_TOKEN secret is not set. Skipping deployment."
             echo "Please set the DEPLOY_TOKEN secret in repository settings to enable deployment."
             exit 0
           fi
+          
+          # Function to clean up credentials
+          cleanup() {
+            rm -f ~/.git-credentials
+            git config --global --unset credential.helper || true
+          }
+          
+          # Set trap to ensure cleanup happens even on error
+          trap cleanup EXIT
           
           # Configure git credential helper to avoid exposing token in URLs
           git config --global credential.helper store
@@ -69,14 +80,16 @@ jobs:
           # Set up the deployment remote using HTTPS without token in URL
           git remote add deployment https://github.com/${TARGET_REPO}.git
           
-          # Fetch the deployment repository
-          git fetch deployment || echo "Deployment repository might not exist yet"
+          # Fetch the deployment repository with better error handling
+          echo "Fetching deployment repository..."
+          if ! git fetch deployment 2>&1; then
+            echo "Note: Could not fetch from deployment repository. This may be normal if it's a new repository."
+            echo "Proceeding with push..."
+          fi
           
           # Push to the deployment repository using --force-with-lease for safety
           # This prevents overwriting if remote has been updated since fetch
+          echo "Pushing to ${TARGET_REPO}@${TARGET_BRANCH}..."
           git push deployment HEAD:${TARGET_BRANCH} --force-with-lease
-          
-          # Clean up credentials
-          rm -f ~/.git-credentials
           
           echo "Successfully deployed to ${TARGET_REPO}@${TARGET_BRANCH}"
