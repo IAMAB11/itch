@@ -27,6 +27,7 @@
     *   [Data Types in Parsed Messages](#data-types-in-parsed-messages)
 *   [Error Handling](#error-handling)
     *   [Handling Strategies](#handling-strategies)
+*   [Deployment](#deployment)
 *   [Contributing](#contributing)
 *   [License](#license)
 *   [References](#references)
@@ -433,6 +434,15 @@ It's crucial to anticipate these errors in your application:
     *   **Halt Processing:** In other scenarios, particularly where data integrity is paramount, any parsing error might necessitate halting the entire process and flagging the data source as invalid.
 
 Choosing the right strategy depends on the requirements of your application and the expected quality of your ITCH data sources.
+
+## Deployment
+
+This repository includes an automated deployment workflow for syncing/mirroring to deployment repositories. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed information on:
+
+- Automatic deployment on pushes to main/master branches
+- Manual deployment via GitHub Actions interface
+- Configuration of deployment targets and credentials
+- Troubleshooting deployment issues
 
 ## Contributing
 

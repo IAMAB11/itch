@@ -1,0 +1,74 @@
+name: Deploy to Deployment Repository
+
+'on':
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      target_repo:
+        description: 'Target deployment repository (format: owner/repo)'
+        required: false
+        default: ''
+      target_branch:
+        description: 'Target branch in deployment repository'
+        required: false
+        default: 'main'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper sync
+          
+      - name: Configure Git
+        run: |
+          git config --global user.name 'GitHub Actions Bot'
+          git config --global user.email 'actions@github.com'
+      
+      - name: Setup deployment repository information
+        id: setup
+        run: |
+          # Use workflow input if provided, otherwise use environment variable
+          if [ -n "${{ github.event.inputs.target_repo }}" ]; then
+            echo "target_repo=${{ github.event.inputs.target_repo }}" >> $GITHUB_OUTPUT
+            echo "target_branch=${{ github.event.inputs.target_branch }}" >> $GITHUB_OUTPUT
+          else
+            # Default deployment repository (can be configured via repository secrets/variables)
+            echo "target_repo=${{ vars.DEPLOYMENT_REPO || github.repository }}" >> $GITHUB_OUTPUT
+            echo "target_branch=${{ vars.DEPLOYMENT_BRANCH || 'deploy' }}" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Display deployment information
+        run: |
+          echo "Deploying to repository: ${{ steps.setup.outputs.target_repo }}"
+          echo "Target branch: ${{ steps.setup.outputs.target_branch }}"
+          echo "Source commit: ${{ github.sha }}"
+          
+      - name: Push to deployment repository
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+          TARGET_REPO: ${{ steps.setup.outputs.target_repo }}
+          TARGET_BRANCH: ${{ steps.setup.outputs.target_branch }}
+        run: |
+          if [ -z "$DEPLOY_TOKEN" ]; then
+            echo "Warning: DEPLOY_TOKEN secret is not set. Skipping deployment."
+            echo "Please set the DEPLOY_TOKEN secret in repository settings to enable deployment."
+            exit 0
+          fi
+          
+          # Set up the deployment remote
+          git remote add deployment https://x-access-token:${DEPLOY_TOKEN}@github.com/${TARGET_REPO}.git
+          
+          # Fetch the deployment repository
+          git fetch deployment || echo "Deployment repository might not exist yet"
+          
+          # Push to the deployment repository
+          git push deployment HEAD:${TARGET_BRANCH} --force
+          
+          echo "Successfully deployed to ${TARGET_REPO}@${TARGET_BRANCH}"
