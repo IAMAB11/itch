@@ -16,8 +16,10 @@ The deployment workflow (`deploy-to-repo.yml`) automatically syncs the repositor
 The workflow automatically triggers on pushes to the `main` or `master` branch. When triggered:
 
 1. It checks out the latest code from the source repository
-2. Configures Git with appropriate credentials
-3. Pushes all content to the target deployment repository
+2. Validates that a deployment target is configured (via `DEPLOYMENT_REPO` variable)
+3. Configures Git with appropriate credentials
+4. Fetches the deployment repository (if it exists)
+5. Pushes all content to the target deployment repository using safe push strategies
 
 ## Manual Deployment
 

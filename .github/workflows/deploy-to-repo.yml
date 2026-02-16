@@ -40,10 +40,17 @@ jobs:
           if [ -n "${{ github.event.inputs.target_repo }}" ]; then
             echo "target_repo=${{ github.event.inputs.target_repo }}" >> $GITHUB_OUTPUT
             echo "target_branch=${{ github.event.inputs.target_branch }}" >> $GITHUB_OUTPUT
-          else
-            # Default deployment repository (can be configured via repository secrets/variables)
-            echo "target_repo=${{ vars.DEPLOYMENT_REPO || github.repository }}" >> $GITHUB_OUTPUT
+          elif [ -n "${{ vars.DEPLOYMENT_REPO }}" ]; then
+            # Use repository variable if configured
+            echo "target_repo=${{ vars.DEPLOYMENT_REPO }}" >> $GITHUB_OUTPUT
             echo "target_branch=${{ vars.DEPLOYMENT_BRANCH || 'deploy' }}" >> $GITHUB_OUTPUT
+          else
+            # No deployment target configured
+            echo "Error: No deployment target configured."
+            echo "Please set either:"
+            echo "  1. DEPLOYMENT_REPO repository variable, or"
+            echo "  2. Run workflow manually with target_repo input"
+            exit 1
           fi
           
       - name: Display deployment information
@@ -84,14 +91,25 @@ jobs:
           
           # Fetch the deployment repository with better error handling
           echo "Fetching deployment repository..."
-          if ! git fetch deployment 2>&1; then
-            echo "Note: Could not fetch from deployment repository. This may be normal if it's a new repository."
-            echo "Proceeding with push..."
+          if git fetch deployment 2>&1; then
+            echo "✓ Successfully fetched from deployment repository"
+            FETCH_SUCCESS=true
+          else
+            echo "Note: Could not fetch from deployment repository."
+            echo "This may be normal if it's a new repository or the branch doesn't exist yet."
+            FETCH_SUCCESS=false
           fi
           
-          # Push to the deployment repository using --force-with-lease for safety
-          # This prevents overwriting if remote has been updated since fetch
+          # Push to the deployment repository
           echo "Pushing to ${TARGET_REPO}@${TARGET_BRANCH}..."
-          git push deployment HEAD:${TARGET_BRANCH} --force-with-lease
+          if [ "$FETCH_SUCCESS" = true ]; then
+            # Use --force-with-lease for safety when we successfully fetched
+            # This prevents overwriting if remote has been updated since fetch
+            git push deployment HEAD:${TARGET_BRANCH} --force-with-lease=refs/heads/${TARGET_BRANCH}
+          else
+            # For new repositories or branches, use regular push
+            # This is safe because there's nothing to overwrite
+            git push deployment HEAD:${TARGET_BRANCH}
+          fi
           
           echo "Successfully deployed to ${TARGET_REPO}@${TARGET_BRANCH}"
